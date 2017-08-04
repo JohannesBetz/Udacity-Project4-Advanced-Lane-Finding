@@ -1,10 +1,12 @@
-
+from moviepy.editor import VideoFileClip
 import numpy as np
 import cv2
 import math
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import glob
+import imageio
+imageio.plugins.ffmpeg.download()
 
 from scipy.signal import argrelmax
 from scipy.signal import find_peaks_cwt
@@ -184,6 +186,9 @@ def select_region_of_interest(image, plot=False):
     if (plot):
         masked_image = cv2.bitwise_or(masked_image, cv2.polylines(masked_image, points, False, 255))
 
+    #plt.imshow(masked_image)
+
+
     return masked_image
 
 
@@ -329,8 +334,7 @@ def transform_perspective(image, M):
 
 def get_lane_lines_base(image):
 
-    histogram = np.sum(image[image.shape[0] / 2:, :], axis=0)
-
+    histogram = np.sum(image[image.shape[0] // 2:, :], axis=0)
     indexes = find_peaks_cwt(histogram, np.arange(1, 550))
 
     return [(indexes[0], image.shape[0]), (indexes[-1], image.shape[0])]
@@ -349,8 +353,7 @@ def get_lane_pixels(image, lane_base):
 
     window_high = x_base + window_size / 2
 
-    # Define a region
-    window = image[:, window_low:window_high]
+    window = image[:, int(window_low):int(window_high)]
 
     # Find the coordinates of the white pixels in this region
     x, y = np.where(window == 1)
@@ -437,6 +440,14 @@ def process_image(image):
         binary_image = get_binary_image(undistorted_image)
 
         roi_image = select_region_of_interest(binary_image)
+        #plt.imshow(roi_image)
+        #plt.show()
+
+        lines, lines_image = hough_lines(roi_image, rho=rho, theta=theta, threshold=threshold,
+                                         min_line_len=min_line_length,
+                                         max_line_gap=max_line_gap)
+
+        M, M_inv = compute_transformation_matrix(image, lines)
 
         persp_transform = transform_perspective(roi_image, M)
 
@@ -478,19 +489,19 @@ ret, mtx, dist, rvecs, tvecs = calibrate_camera(calibration_images, nx, ny)
 
 # Perform distortion Correction on one of the calibration images
 calibration_image = plt.imread("camera_cal/calibration1.jpg")
-plot_on_subplots([calibration_image, undistort(calibration_image)], ["Original Image", "Distortion Corrected Image"])
+#plot_on_subplots([calibration_image, undistort(calibration_image)], ["Original Image", "Distortion Corrected Image"])
 
 # Perform un-distortion on a test images
 test_image = plt.imread("test_images/test5.jpg")
-plot_on_subplots([test_image, undistort(test_image)], ["Original Image", "Distortion Corrected Image"])
+#plot_on_subplots([test_image, undistort(test_image)], ["Original Image", "Distortion Corrected Image"])
 
 bin_image = get_binary_image(test_image)
-plot_on_subplots([test_image , bin_image], ["Original Image", "Binary Image"], cmap="gray")
+#plot_on_subplots([test_image , bin_image], ["Original Image", "Binary Image"], cmap="gray")
 
 #Region of Interest
 
 roi_image = select_region_of_interest(bin_image)
-plot_on_subplots([bin_image, roi_image], ["Binary Image", "Region of Interest"], cmap="gray")
+#plot_on_subplots([bin_image, roi_image], ["Binary Image", "Region of Interest"], cmap="gray")
 
 # Hough transform parameters
 rho = 1 # distance resolution in pixels of the Hough grid
@@ -512,9 +523,21 @@ plt.imshow(final)
 
 
 # Calculate the transformation matrix and inverse transformation matrix
-test_image = plt.imread(glob.glob("test_images/*")[2])
+# test_image = plt.imread(glob.glob("test_images/*")[2])
 M, M_inv = get_transformation_matrix(test_image)
 
 #Whole Image Process
-test_image = plt.imread("test_images/test5.jpg")
-process_image(test_image)
+test_image = plt.imread("test_images/test3.jpg")
+processed_image=process_image(test_image)
+plt.imshow(processed_image)
+#plt.show()
+
+def process(image):
+    return process_image(image)
+
+white_output = 'output_images/output.mp4'
+clip1 = VideoFileClip("./project_video.mp4")
+a = clip1.fl_image
+white_clip = clip1.fl_image(process) #NOTE: this function expects color images!!
+white_clip.write_videofile(white_output, audio=False)
+
