@@ -536,7 +536,7 @@ def process(image):
     return process_image(image)
 
 white_output = 'output_images/output.mp4'
-clip1 = VideoFileClip("./project_video.mp4")
+clip1 = VideoFileClip("./challenge_video.mp4")
 a = clip1.fl_image
 white_clip = clip1.fl_image(process) #NOTE: this function expects color images!!
 white_clip.write_videofile(white_output, audio=False)
