@@ -389,7 +389,7 @@ def calculate_rad_curvature(image, pixels):
     ym_per_pix = 30 / image.shape[1]  # meters per pixel in y dimension
     xm_per_pix = 3.7 / 700  # meteres per pixel in x dimension
 
-    y_eval = np.max(y)
+    y_eval = np.max(y) /2.
 
     fit = np.polyfit(y * ym_per_pix, x * xm_per_pix, 2)
 
@@ -418,7 +418,7 @@ def draw_lane_lines(image, left_pixels, right_pixels, left_base, right_base):
 
     line2 = get_curved_lane_line(right_pixels)
     line2_pts = draw_curved_line(image, line2)
-    left_line_curvature = calculate_rad_curvature(image, right_pixels)
+    right_line_curvature = calculate_rad_curvature(image, right_pixels)
 
     top_points = [line1_pts[-1], line2_pts[-1]]
     base_points = [line1_pts[0], line2_pts[0]]
@@ -428,7 +428,7 @@ def draw_lane_lines(image, left_pixels, right_pixels, left_base, right_base):
     # Fill in the detected lane
     cv2.fillPoly(image, [np.concatenate((line2_pts, line1_pts, top_points, base_points))], color=(152, 251, 152))
 
-    return (image, left_line_curvature, left_line_curvature, distance_from_left)
+    return (image, left_line_curvature, right_line_curvature, distance_from_left)
 
 def process_image(image):
 
@@ -530,14 +530,14 @@ M, M_inv = get_transformation_matrix(test_image)
 test_image = plt.imread("test_images/test3.jpg")
 processed_image=process_image(test_image)
 plt.imshow(processed_image)
-#plt.show()
+plt.show()
 
 def process(image):
     return process_image(image)
 
-white_output = 'output_images/output.mp4'
-clip1 = VideoFileClip("./challenge_video.mp4")
-a = clip1.fl_image
-white_clip = clip1.fl_image(process) #NOTE: this function expects color images!!
-white_clip.write_videofile(white_output, audio=False)
+#white_output = 'output_images/output.mp4'
+#clip1 = VideoFileClip("./project_video.mp4")
+#a = clip1.fl_image
+#white_clip = clip1.fl_image(process) #NOTE: this function expects color images!!
+#white_clip.write_videofile(white_output, audio=False)
 
