@@ -393,8 +393,10 @@ def calculate_rad_curvature(image, pixels):
 
     fit = np.polyfit(y * ym_per_pix, x * xm_per_pix, 2)
 
-    return int(((1 + (2 * fit[0] * y_eval + fit[1]) ** 2) ** 1.5) \
+    return int(((1 + (2 * fit[0] * y_eval * ym_per_pix + fit[1]) ** 2) ** 1.5) \
                / np.absolute(2 * fit[0]))
+    #return int(((1 + (2 * fit[0] * y_eval + fit[1]) ** 2) ** 1.5) \
+    #           / np.absolute(2 * fit[0]))
 
 
 def compute_distance_from_lane(image, left_base, right_base):
